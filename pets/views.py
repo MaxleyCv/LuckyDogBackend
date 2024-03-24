@@ -7,9 +7,10 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from pets.models import Finder, Searcher
+from pets.models import Finder, Searcher, FinderEmbedding, SearcherEmbedding
 from pets.serializers import FinderSerializer, FinderCreateIncomingSerializer, SearcherSerializer, \
     SearcherCreateIncomingSerializer
+from pets.services import create_embeddings
 
 
 # Create your views here.
@@ -41,9 +42,12 @@ class FinderAPI(APIView):
         #incoming_data = FinderCreateIncomingSerializer(data=request.data)
         #incoming_data.is_valid(raise_exception=False)
         # val_data = incoming_data.validated_data
+        emb = create_embeddings(request.data['photo'])
         request.data['photo'] = base64.b64encode(request.data['photo'].encode("ascii"))
         finder = Finder(**request.data)
         finder.save()
+        embedding = FinderEmbedding(finder=finder, embedding="|".join(list(map(str, emb))))
+        embedding.save()
         return Response(data={}, status=status.HTTP_200_OK)
 
 
@@ -71,9 +75,12 @@ class SearcherAPI(APIView):
         }
     )
     def post(request, *args, **kwargs):
+        emb = create_embeddings(request.data['photo'])
         request.data['photo'] = base64.b64encode(request.data['photo'].encode("ascii"))
         finder = Searcher(**request.data)
         finder.save()
+        embedding = SearcherEmbedding(searcher=finder, embedding="|".join(list(map(str, emb))))
+        embedding.save()
         return Response(data={}, status=status.HTTP_200_OK)
 
 
@@ -82,6 +89,7 @@ class GetMatches(APIView):
     @staticmethod
     @extend_schema()
     def get(request, *args, **kwargs):
+
         pass
 
 
