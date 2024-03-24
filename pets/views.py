@@ -77,5 +77,13 @@ class SearcherAPI(APIView):
         return Response(data={}, status=status.HTTP_200_OK)
 
 
+class GetMatches(APIView):
+
+    @staticmethod
+    @extend_schema()
+    def get(request, *args, **kwargs):
+        pass
+
+
 finder_view = FinderAPI.as_view()
 searcher_view = SearcherAPI.as_view()
