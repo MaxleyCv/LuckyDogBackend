@@ -18,13 +18,14 @@ from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-from pets.views import finder_view, searcher_view
+from pets.views import finder_view, searcher_view, searching_matches
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/finder', finder_view, name='finders'),
     path('api/searcher', searcher_view, name='searchers'),
+    path('api/matchsearch/', searching_matches, name="matches"),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     # Optional UI:

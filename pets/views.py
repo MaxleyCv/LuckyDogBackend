@@ -1,5 +1,7 @@
 import base64
+import uuid
 
+import numpy as np
 from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -10,7 +12,7 @@ from rest_framework.views import APIView
 from pets.models import Finder, Searcher, FinderEmbedding, SearcherEmbedding
 from pets.serializers import FinderSerializer, FinderCreateIncomingSerializer, SearcherSerializer, \
     SearcherCreateIncomingSerializer
-from pets.services import create_embeddings
+from pets.services import create_embeddings, rank_findings
 
 
 # Create your views here.
@@ -34,7 +36,7 @@ class FinderAPI(APIView):
     @extend_schema(
         request=FinderCreateIncomingSerializer,
         responses={
-            200: {},
+            200: {"id": uuid.uuid4()},
             400: {"description": "desc"}
         }
     )
@@ -84,14 +86,28 @@ class SearcherAPI(APIView):
         return Response(data={}, status=status.HTTP_200_OK)
 
 
-class GetMatches(APIView):
+class GetMatchesSearcher(APIView):
 
     @staticmethod
     @extend_schema()
     def get(request, *args, **kwargs):
-
-        pass
+        # if searcher_id is None:
+        #     return Response(data={}, status=status.HTTP_404_NOT_FOUND)
+        # elif Searcher.objects.filter(id=searcher_id).first() is None:
+        #     return Response(data={}, status=status.HTTP_404_NOT_FOUND)
+        # searcher = Searcher.objects.get(id=searcher_id).first()
+        searcher = Searcher.objects.first()
+        finder_embeddings = list(FinderEmbedding.objects.all())
+        search_vector = searcher.searcherembedding_set.first().embedding
+        search_vector = np.array(list(map(float, search_vector.split("|"))))
+        finder_embeddings = rank_findings(search_vector, finder_embeddings)
+        related_finders = [emb.finder for emb in finder_embeddings]
+        return Response(
+            data=FinderSerializer(related_finders, many=True).data,
+            status=status.HTTP_200_OK
+        )
 
 
 finder_view = FinderAPI.as_view()
 searcher_view = SearcherAPI.as_view()
+searching_matches = GetMatchesSearcher.as_view()

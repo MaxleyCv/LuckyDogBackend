@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import os
 import torchvision.models as models
+import torchvision.transforms as transfroms
 
 
 def to_tensor(x, **kwargs):
@@ -42,20 +43,15 @@ def get_embeddings(image):
 
     for i, box in enumerate(bboxes_cats):
         cropped_image = image[int(box[0][1]):int(box[0][3]), int(box[0][0]):int(box[0][2]), :]
-        # cropped_image_file = os.path.join(result_dir, f'cat_cropped_image_{i}.jpg')
-        # cv2.imwrite(cropped_image_file, cropped_image)
-
         cropped_image = cropped_image / 255
+        image_tensor = torch.tensor(cropped_image, dtype=torch.float32).permute(2, 0, 1)
 
         # Convert the image to a PyTorch tensor
-        image_tensor = to_tensor(cropped_image)
-        image_tensor = torch.tensor(image_tensor, dtype=torch.float32)
+        image_tensor = transfroms.functional.resize(image_tensor, (224, 224))
         input = image_tensor.unsqueeze(0)
 
         vector = net(input)
         vectors.append(vector.squeeze().detach().cpu().numpy())
-        break
-
 
     for i, box in enumerate(bboxes_dogs):
         cropped_image = image[int(box[0][1]):int(box[0][3]), int(box[0][0]):int(box[0][2]), :]
@@ -63,15 +59,14 @@ def get_embeddings(image):
         # cv2.imwrite(cropped_image_file, cropped_image)
 
         cropped_image = cropped_image / 255
+        image_tensor = torch.tensor(cropped_image, dtype=torch.float32).permute(2, 0, 1)
 
         # Convert the image to a PyTorch tensor
-        image_tensor = to_tensor(cropped_image)
-        image_tensor = torch.tensor(image_tensor, dtype=torch.float32)
+        image_tensor = transfroms.functional.resize(image_tensor, (224, 224))
         input = image_tensor.unsqueeze(0)
 
         vector = net(input)
         vectors.append(vector.squeeze().detach().cpu().numpy())
-        break
 
     return vectors[0]
 
@@ -86,3 +81,17 @@ def readb64(uri):
 def create_embeddings(image_uri):
     image = readb64(image_uri)
     return get_embeddings(image)
+
+
+def loss(embedding, eval_vector: np.array):
+    embedding_vector = np.array(list(map(float, embedding.embedding.split("|"))))
+    # TODO: SAMIN WORK
+    res = np.linalg.norm(embedding_vector - eval_vector)
+    return res
+
+def rank_findings(evaluation_vector, evaluation_embeddings):
+
+    evaluation_embeddings.sort(
+        key=lambda x: loss(x, evaluation_vector)
+    )
+    return evaluation_embeddings
