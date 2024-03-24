@@ -50,7 +50,7 @@ class FinderAPI(APIView):
         finder.save()
         embedding = FinderEmbedding(finder=finder, embedding="|".join(list(map(str, emb))))
         embedding.save()
-        return Response(data={}, status=status.HTTP_200_OK)
+        return Response(data={'id': finder.id}, status=status.HTTP_200_OK)
 
 
 class SearcherAPI(APIView):
@@ -83,7 +83,7 @@ class SearcherAPI(APIView):
         finder.save()
         embedding = SearcherEmbedding(searcher=finder, embedding="|".join(list(map(str, emb))))
         embedding.save()
-        return Response(data={}, status=status.HTTP_200_OK)
+        return Response(data={'id': finder.id}, status=status.HTTP_200_OK)
 
 
 class GetMatchesSearcher(APIView):
@@ -91,12 +91,12 @@ class GetMatchesSearcher(APIView):
     @staticmethod
     @extend_schema()
     def get(request, *args, **kwargs):
-        # if searcher_id is None:
-        #     return Response(data={}, status=status.HTTP_404_NOT_FOUND)
-        # elif Searcher.objects.filter(id=searcher_id).first() is None:
-        #     return Response(data={}, status=status.HTTP_404_NOT_FOUND)
-        # searcher = Searcher.objects.get(id=searcher_id).first()
-        searcher = Searcher.objects.first()
+        searcher_id = kwargs.get("searcher_id")
+        if searcher_id is None:
+            return Response(data={}, status=status.HTTP_404_NOT_FOUND)
+        elif Searcher.objects.filter(id=searcher_id).first() is None:
+            return Response(data={}, status=status.HTTP_404_NOT_FOUND)
+        searcher = Searcher.objects.filter(id=searcher_id).first()
         finder_embeddings = list(FinderEmbedding.objects.all())
         search_vector = searcher.searcherembedding_set.first().embedding
         search_vector = np.array(list(map(float, search_vector.split("|"))))
@@ -108,6 +108,28 @@ class GetMatchesSearcher(APIView):
         )
 
 
+class GetMatchesFinder(APIView):
+    @staticmethod
+    @extend_schema()
+    def get(request, *args, **kwargs):
+        finder_id = kwargs.get("finder_id")
+        if finder_id is None:
+            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+        elif Finder.objects.filter(id=finder_id).first() is None:
+            return Response(data={}, status=status.HTTP_404_NOT_FOUND)
+        finder = Finder.objects.filter(id=finder_id).first()
+        searcher_embeddings = list(SearcherEmbedding.objects.all())
+        search_vector = finder.finderembedding_set.first().embedding
+        search_vector = np.array(list(map(float, search_vector.split("|"))))
+        finder_embeddings = rank_findings(search_vector, searcher_embeddings)
+        related_searchers = [emb.searcher for emb in finder_embeddings]
+        return Response(
+            data=SearcherSerializer(related_searchers, many=True).data,
+            status=status.HTTP_200_OK
+        )
+
+
 finder_view = FinderAPI.as_view()
 searcher_view = SearcherAPI.as_view()
 searching_matches = GetMatchesSearcher.as_view()
+finding_matches = GetMatchesFinder.as_view()

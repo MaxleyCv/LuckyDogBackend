@@ -17,7 +17,7 @@ class Searcher(models.Model):
     location = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.pet_name + " " + self.location
+        return self.pet_name + " " + self.location  + " " + str(self.id)
 
 
 class Finder(models.Model):
@@ -34,7 +34,7 @@ class Finder(models.Model):
     location = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.pet_name + " " + self.location
+        return self.pet_name + " " + self.location + " " + str(self.id)
 
 
 class SearcherEmbedding(models.Model):

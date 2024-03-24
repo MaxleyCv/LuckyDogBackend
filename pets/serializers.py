@@ -10,7 +10,7 @@ class FinderSerializer(serializers.ModelSerializer):
     photo = serializers.SerializerMethodField()
 
     def get_photo(self, obj):
-        return None
+        return base64.b64decode(obj.photo).decode('ascii')
 
     class Meta:
         model = Finder
@@ -27,7 +27,6 @@ class SearcherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Searcher
         fields = '__all__'
-
 
 
 class FinderCreateIncomingSerializer(serializers.Serializer):

@@ -55,7 +55,7 @@ SPECTACULAR_SETTINGS = {
     'REDOC_DIST': 'SIDECAR',
     'TITLE': 'LuckyDog',
     'DESCRIPTION': 'Fuck cougars',
-    'VERSION': '0.0.1alpha',
+    'VERSION': '0.0.1beta',
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
 }

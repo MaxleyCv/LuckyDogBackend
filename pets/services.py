@@ -1,6 +1,5 @@
 import base64
 
-from PIL import Image
 import ultralytics
 import cv2
 import torch
@@ -87,7 +86,9 @@ def loss(embedding, eval_vector: np.array):
     embedding_vector = np.array(list(map(float, embedding.embedding.split("|"))))
     # TODO: SAMIN WORK
     res = np.linalg.norm(embedding_vector - eval_vector)
+    print(res)
     return res
+
 
 def rank_findings(evaluation_vector, evaluation_embeddings):
 
