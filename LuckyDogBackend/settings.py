@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,10 +101,12 @@ WSGI_APPLICATION = 'LuckyDogBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'HOST': '34.106.128.13',
-        'USER': 'postgres',
-        'PASSWORD': 'HelloWorld2022!',
-        'NAME': 'luckydog',
+        'HOST': os.getenv(
+            'DB_HOST'
+        ),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
+        'NAME': os.getenv('DB_NAME'),
     }
 }
 
